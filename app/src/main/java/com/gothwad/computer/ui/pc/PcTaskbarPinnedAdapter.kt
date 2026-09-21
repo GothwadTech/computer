@@ -3,8 +3,10 @@ package com.gothwad.computer.ui.pc
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.gothwad.computer.R
 import com.gothwad.computer.data.AppEntry
 import com.gothwad.computer.databinding.ItemPcTaskbarPinnedBinding
 import com.gothwad.computer.ui.view.AppCardDiffCallback
@@ -72,6 +74,18 @@ class PcTaskbarPinnedAdapter(
             val bitmap = app.icon
             if (bitmap != null) {
                 binding.imgTaskbarPinnedIcon.setImageBitmap(bitmap)
+                binding.imgTaskbarPinnedIcon.visibility = View.VISIBLE
+                binding.tvTaskbarPinnedFallback.visibility = View.GONE
+            } else if (app.pkg == "com.gothwad.computer.files") {
+                binding.imgTaskbarPinnedIcon.setImageDrawable(ContextCompat.getDrawable(binding.root.context, R.drawable.ic_taskbar_files))
+                binding.imgTaskbarPinnedIcon.visibility = View.VISIBLE
+                binding.tvTaskbarPinnedFallback.visibility = View.GONE
+            } else if (app.pkg == "com.gothwad.computer.webapp") {
+                binding.imgTaskbarPinnedIcon.setImageDrawable(ContextCompat.getDrawable(binding.root.context, R.drawable.ic_taskbar_browser))
+                binding.imgTaskbarPinnedIcon.visibility = View.VISIBLE
+                binding.tvTaskbarPinnedFallback.visibility = View.GONE
+            } else if (app.pkg == "com.gothwad.computer.store") {
+                binding.imgTaskbarPinnedIcon.setImageDrawable(ContextCompat.getDrawable(binding.root.context, R.drawable.ic_win_store))
                 binding.imgTaskbarPinnedIcon.visibility = View.VISIBLE
                 binding.tvTaskbarPinnedFallback.visibility = View.GONE
             } else {

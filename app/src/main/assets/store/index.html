@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Gothwad Store</title>
+  <link rel="stylesheet" href="store.css" />
+</head>
+<body>
+
+  <!-- Topbar / Store Header -->
+  <header class="store-header">
+    <div class="brand-section">
+      <!-- Microsoft Store shopping bag logo -->
+      <svg class="brand-icon" viewBox="0 0 24 24">
+        <path fill="#0078D4" d="M19 6h-2c0-2.76-2.24-5-5-5S7 3.24 7 6H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-7-3c1.66 0 3 1.34 3 3H9c0-1.66 1.34-3 3-3zm7 17H5V8h14v12z"/>
+        <path fill="#00A4EF" d="M7.5 10.5h3.8v3.8h-3.8z"/>
+        <path fill="#7FBA00" d="M12.7 10.5h3.8v3.8h-3.8z"/>
+        <path fill="#F25022" d="M7.5 15.7h3.8v3.8h-3.8z"/>
+        <path fill="#FFB900" d="M12.7 15.7h3.8v3.8h-3.8z"/>
+      </svg>
+      <span class="brand-title">Gothwad Store</span>
+    </div>
+
+    <div class="search-box-container">
+      <svg class="search-icon" viewBox="0 0 24 24">
+        <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+      </svg>
+      <input type="text" id="searchInput" class="search-input" placeholder="Search apps, games, tools, websites..." autocomplete="off" />
+      <button id="searchClearBtn" class="search-clear-btn" title="Clear">✕</button>
+    </div>
+
+    <div class="header-right">
+      <span id="totalAppsCount" class="badge-counter">105+ Apps</span>
+    </div>
+  </header>
+
+  <!-- Container -->
+  <div class="store-container">
+    <!-- Left Navigation Rail -->
+    <aside class="sidebar">
+      <div class="nav-group">
+        <div class="nav-item active" data-tab="home">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+          <span>Home</span>
+        </div>
+        <div class="nav-item" data-tab="apps">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/></svg>
+          <span>Apps</span>
+        </div>
+        <div class="nav-item" data-tab="gaming">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 2c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4-3c-.83 0-1.5-.67-1.5-1.5S18.67 9 19.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+          <span>Gaming</span>
+        </div>
+        <div class="nav-item" data-tab="media">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M18 3v2h-2V3H8v2H6V3H4v18h2v-2h2v2h8v-2h2v2h2V3h-2zM8 17H6v-2h2v2zm0-4H6v-2h2v2zm0-4H6V7h2v2zm10 8h-2v-2h2v2zm0-4h-2v-2h2v2zm0-4h-2V7h2v2z"/></svg>
+          <span>Entertainment</span>
+        </div>
+        <div class="nav-item" data-tab="social">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
+          <span>Social</span>
+        </div>
+        <div class="nav-item" data-tab="ai">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M7.5 5.6L10 7 8.6 4.5 10 2 7.5 3.4 5 2l1.4 2.5L5 7zm12 9.8L17 14l1.4 2.5L17 19l2.5-1.4L22 19l-1.4-2.5L22 14zM22 2l-2.5 1.4L17 2l1.4 2.5L17 7l2.5-1.4L22 7l-1.4-2.5zm-7.63 5.29c-.39-.39-1.02-.39-1.41 0L1.29 18.96c-.39.39-.39 1.02 0 1.41l2.34 2.34c.39.39 1.02.39 1.41 0L16.7 11.05c.39-.39.39-1.02 0-1.41l-2.33-2.35zm-1.03 5.49l-2.12-2.12 2.44-2.44 2.12 2.12-2.44 2.44z"/></svg>
+          <span>AI & Innovation</span>
+        </div>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-item" data-tab="library">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z"/></svg>
+          <span>Library</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main id="contentArea" class="content-area">
+      <!-- Dynamically populated by store.js -->
+    </main>
+  </div>
+
+  <!-- App Detail Modal Sheet -->
+  <div id="modalOverlay" class="modal-overlay">
+    <div class="modal-card">
+      <div id="modalBanner" class="modal-header-banner">
+        <button id="modalCloseBtn" class="modal-close-btn" title="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-app-hero">
+          <img id="modalIcon" class="modal-app-icon" src="" alt="" onerror="onIconLoadError(this, 'App')"/>
+          <div class="modal-app-meta">
+            <h1 id="modalTitle" class="modal-app-title">App Title</h1>
+            <div id="modalDev" class="modal-app-dev">Developer</div>
+            <div id="modalRating" class="modal-stats-row">★ 4.8 (2.1M ratings)</div>
+          </div>
+        </div>
+
+        <div class="modal-actions-bar">
+          <button id="modalBtnInstall" class="btn-modal-install">Get & Install to Desktop</button>
+          <button id="modalBtnOpen" class="btn-modal-open" style="display: none;">Open App</button>
+          <button id="modalBtnUninstall" class="btn-modal-uninstall" style="display: none;">Uninstall from PC</button>
+        </div>
+
+        <div>
+          <h3 class="modal-section-title">Overview</h3>
+          <p id="modalDesc" class="modal-desc-text">App description</p>
+        </div>
+
+        <div>
+          <h3 class="modal-section-title">Key Highlights</h3>
+          <ul class="modal-features-list">
+            <li>Lightweight Progressive Web App, fast boot with zero storage bloat</li>
+            <li>Runs in high-performance desktop sandbox with isolated sessions</li>
+            <li>Instant 1-click desktop icon and start menu integration</li>
+            <li>Always up to date directly from official cloud servers</li>
+          </ul>
+        </div>
+
+        <div class="specs-grid">
+          <div class="spec-item">
+            <span class="spec-label">Platform</span>
+            <span class="spec-value">Gothwad PC Cloud</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Package Type</span>
+            <span class="spec-value">Standard PWA</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Pricing</span>
+            <span class="spec-value">Free / Cloud</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notice -->
+  <div id="toastNotice" class="toast-notice"></div>
+
+  <!-- Scripts -->
+  <script src="apps.js"></script>
+  <script src="store.js"></script>
+</body>
+</html>

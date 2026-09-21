@@ -24,6 +24,7 @@ import androidx.core.content.ContextCompat
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.gothwad.computer.Actions
 import com.gothwad.computer.R
+import com.gothwad.computer.apps.webapp.WebAppManager
 import com.gothwad.computer.data.AppEntry
 import com.gothwad.computer.data.AppRepository
 import com.gothwad.computer.data.ConfigStore
@@ -402,6 +403,18 @@ class PcSettingsOtherTabs(
             subtitle = "Defaults for web browser, email, media player, and assistant"
         ) {
             openIntent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS)
+        }
+
+        // Gothwad App Store
+        PcSettingCardHelper.addCard(
+            parent = container,
+            context = context,
+            iconRes = R.drawable.ic_win_store,
+            title = "Gothwad App Store",
+            subtitle = "Browse & install 105+ cloud web apps, games, and developer tools",
+            value = "Store"
+        ) {
+            Toast.makeText(context, "Open Gothwad Store from Desktop or Taskbar to browse 105+ apps!", Toast.LENGTH_SHORT).show()
         }
 
         // Create Custom Web App (PWA)
@@ -1138,24 +1151,19 @@ class PcSettingsOtherTabs(
             .setView(view)
             .setPositiveButton("Create Shortcut") { _, _ ->
                 val name = etName.text.toString().trim()
-                var url = etUrl.text.toString().trim()
-                if (name.isNotEmpty() && url.isNotEmpty()) {
-                    if (!url.startsWith("http://") && !url.startsWith("https://")) {
-                        url = "https://$url"
-                    }
-                    val webKey = "web:$url"
-                    val currentOrder = config.pcDesktopOrder.toMutableList()
-                    currentOrder.add(webKey)
-                    val customLabels = config.pcCustomLabels.toMutableMap()
-                    customLabels[webKey] = name
-
-                    updateConfigProperty {
-                        it.copy(
-                            pcDesktopOrder = currentOrder,
-                            pcCustomLabels = customLabels
+                val url = etUrl.text.toString().trim()
+                if (url.isNotEmpty()) {
+                    scope.launch {
+                        WebAppManager.installWebApp(
+                            context = context,
+                            url = url,
+                            title = name.ifEmpty { "Web App" },
+                            icon = null
                         )
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(context, "Added '${name.ifEmpty { "Web App" }}' to desktop!", Toast.LENGTH_SHORT).show()
+                        }
                     }
-                    Toast.makeText(context, "Added $name shortcut to desktop!", Toast.LENGTH_SHORT).show()
                 }
             }
             .setNegativeButton("Cancel", null)

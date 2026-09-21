@@ -6,7 +6,9 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
+import com.gothwad.computer.R
 import com.gothwad.computer.data.AppEntry
 import com.gothwad.computer.data.LauncherConfig
 import com.gothwad.computer.databinding.ItemPcDesktopIconBinding
@@ -118,6 +120,18 @@ class PcDesktopIconAdapter(
             val bitmap = app.icon
             if (bitmap != null) {
                 binding.imgAppIcon.setImageBitmap(bitmap)
+                binding.imgAppIcon.visibility = View.VISIBLE
+                binding.tvFallbackLetter.visibility = View.GONE
+            } else if (app.pkg == "com.gothwad.computer.files") {
+                binding.imgAppIcon.setImageDrawable(ContextCompat.getDrawable(binding.root.context, R.drawable.ic_taskbar_files))
+                binding.imgAppIcon.visibility = View.VISIBLE
+                binding.tvFallbackLetter.visibility = View.GONE
+            } else if (app.pkg == "com.gothwad.computer.webapp") {
+                binding.imgAppIcon.setImageDrawable(ContextCompat.getDrawable(binding.root.context, R.drawable.ic_taskbar_browser))
+                binding.imgAppIcon.visibility = View.VISIBLE
+                binding.tvFallbackLetter.visibility = View.GONE
+            } else if (app.pkg == "com.gothwad.computer.store") {
+                binding.imgAppIcon.setImageDrawable(ContextCompat.getDrawable(binding.root.context, R.drawable.ic_win_store))
                 binding.imgAppIcon.visibility = View.VISIBLE
                 binding.tvFallbackLetter.visibility = View.GONE
             } else {

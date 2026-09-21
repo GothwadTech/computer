@@ -55,9 +55,12 @@ import com.gothwad.computer.ui.dialogs.PinEntryDialogFragment
 import com.gothwad.computer.ui.dialogs.SearchDialogFragment
 import com.gothwad.computer.apps.files.FileManagerView
 import com.gothwad.computer.apps.floating.FloatingWindowManager
+import com.gothwad.computer.apps.store.GothwadStoreView
 import com.gothwad.computer.apps.webapp.InstallWebAppDialog
 import com.gothwad.computer.apps.webapp.WebAppManager
 import com.gothwad.computer.apps.webapp.WebAppView
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.toBitmap
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import com.gothwad.computer.service.FloatingTaskbarService
@@ -1225,6 +1228,10 @@ class PcLauncherFragment : Fragment() {
             openFileManagerWindow()
             return
         }
+        if (app.pkg == "com.gothwad.computer.store") {
+            openStoreWindow()
+            return
+        }
         if (app.pkg == "com.gothwad.computer.webapp" || app.pkg.startsWith("pwa://")) {
             val isPwa = app.pkg.startsWith("pwa://")
             val url = if (isPwa) app.pkg.removePrefix("pwa://") else "https://www.google.com"
@@ -1264,6 +1271,42 @@ class PcLauncherFragment : Fragment() {
             contentView = fileView.getView(),
             defaultWidthDp = 700,
             defaultHeightDp = 460
+        )
+    }
+
+    fun openStoreWindow() {
+        val fwm = floatingWindowManager ?: return
+        var storeView: GothwadStoreView? = null
+        storeView = GothwadStoreView(
+            context = requireContext(),
+            coroutineScope = viewLifecycleOwner.lifecycleScope,
+            onAppListChanged = {
+                viewLifecycleOwner.lifecycleScope.launch {
+                    loadApps()
+                }
+            },
+            onOpenWebApp = { url, title ->
+                openWebAppWindow(
+                    initialUrl = url,
+                    title = title,
+                    isStandalone = true
+                )
+            }
+        )
+
+        val windowIcon = ContextCompat.getDrawable(requireContext(), R.drawable.ic_win_store)
+            ?: AppIcons.createDrawable(AppIcons.PATH_STORE, 0xFF0078D4.toInt())
+
+        fwm.openWindow(
+            id = "app_store",
+            title = "Gothwad Store",
+            iconDrawable = windowIcon,
+            contentView = storeView.getView(),
+            defaultWidthDp = 860,
+            defaultHeightDp = 580,
+            onClose = {
+                storeView?.destroy()
+            }
         )
     }
 
@@ -1468,7 +1511,12 @@ class PcLauncherFragment : Fragment() {
     private suspend fun loadApps() {
         val scanned = AppRepository.scan(requireContext()).toMutableList()
 
-        // Inject File Manager and Web App if not present
+        val ctx = requireContext()
+        val filesIcon = ContextCompat.getDrawable(ctx, R.drawable.ic_taskbar_files)?.toBitmap(96, 96)
+        val browserIcon = ContextCompat.getDrawable(ctx, R.drawable.ic_taskbar_browser)?.toBitmap(96, 96)
+        val storeIcon = ContextCompat.getDrawable(ctx, R.drawable.ic_win_store)?.toBitmap(96, 96)
+
+        // Inject File Manager, Web Browser, and Gothwad Store if not present
         if (scanned.none { it.pkg == "com.gothwad.computer.files" }) {
             scanned.add(
                 0,
@@ -1476,7 +1524,7 @@ class PcLauncherFragment : Fragment() {
                     pkg = "com.gothwad.computer.files",
                     label = "File Manager",
                     banner = null,
-                    icon = null,
+                    icon = filesIcon,
                     autoCategory = "productivity",
                     tile = 0xFF4FA7FA.toInt(),
                     stamp = System.currentTimeMillis(),
@@ -1491,9 +1539,24 @@ class PcLauncherFragment : Fragment() {
                     pkg = "com.gothwad.computer.webapp",
                     label = "Web Browser",
                     banner = null,
-                    icon = null,
+                    icon = browserIcon,
                     autoCategory = "apps",
                     tile = 0xFF60A5FA.toInt(),
+                    stamp = System.currentTimeMillis(),
+                    firstInstall = System.currentTimeMillis()
+                )
+            )
+        }
+        if (scanned.none { it.pkg == "com.gothwad.computer.store" }) {
+            scanned.add(
+                2,
+                AppEntry(
+                    pkg = "com.gothwad.computer.store",
+                    label = "Gothwad Store",
+                    banner = null,
+                    icon = storeIcon,
+                    autoCategory = "apps",
+                    tile = 0xFF0078D4.toInt(),
                     stamp = System.currentTimeMillis(),
                     firstInstall = System.currentTimeMillis()
                 )
@@ -1505,8 +1568,23 @@ class PcLauncherFragment : Fragment() {
         for (pkg in pwaPkgs) {
             if (scanned.none { it.pkg == pkg }) {
                 val label = currentConfig.pcCustomLabels[pkg] ?: WebAppManager.formatUrl(pkg.removePrefix("pwa://")).removePrefix("https://").removePrefix("http://")
-                val iconBmp = WebAppManager.loadSavedIcon(requireContext(), pkg)
+                val iconBmp = WebAppManager.loadSavedIcon(ctx, pkg)
                     ?: WebAppManager.generateFallbackSquircleIcon(label)
+
+                // Auto-fetch real icon in background if missing
+                if (!WebAppManager.hasSavedIcon(ctx, pkg)) {
+                    val rawUrl = pkg.removePrefix("pwa://")
+                    viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                        val (_, fetched) = WebAppManager.fetchFaviconAndTitle(rawUrl)
+                        if (fetched != null) {
+                            WebAppManager.saveIcon(ctx, pkg, fetched)
+                            withContext(Dispatchers.Main) {
+                                loadApps()
+                            }
+                        }
+                    }
+                }
+
                 scanned.add(
                     AppEntry(
                         pkg = pkg,
