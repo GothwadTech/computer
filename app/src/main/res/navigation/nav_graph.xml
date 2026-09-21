@@ -7,13 +7,13 @@
 
     <fragment
         android:id="@+id/tvLauncherFragment"
-        android:name="com.gothwad.launcher.ui.tv.TvLauncherFragment"
+        android:name="com.gothwad.computer.ui.tv.TvLauncherFragment"
         android:label="TvLauncherFragment"
         tools:layout="@layout/fragment_tv_launcher" />
 
     <fragment
         android:id="@+id/pcLauncherFragment"
-        android:name="com.gothwad.launcher.ui.pc.PcLauncherFragment"
+        android:name="com.gothwad.computer.ui.pc.PcLauncherFragment"
         android:label="PcLauncherFragment"
         tools:layout="@layout/fragment_pc_launcher" />
 

@@ -15,7 +15,7 @@
         app:navGraph="@navigation/nav_graph" />
 
     <!-- Persistent Status Bar View (Phase 5) -->
-    <com.gothwad.launcher.ui.view.StatusBarView
+    <com.gothwad.computer.ui.view.StatusBarView
         android:id="@+id/main_status_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

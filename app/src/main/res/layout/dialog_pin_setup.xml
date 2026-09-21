@@ -379,7 +379,7 @@
             </LinearLayout>
 
             <!-- On-Screen QWERTY Keyboard for TV remote navigation -->
-            <com.gothwad.launcher.ui.view.OnScreenKeyboardView
+            <com.gothwad.computer.ui.view.OnScreenKeyboardView
                 android:id="@+id/on_screen_keyboard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
