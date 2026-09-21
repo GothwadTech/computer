@@ -11,7 +11,6 @@ import android.widget.TextView
 import com.gothwad.computer.R
 import com.gothwad.computer.data.ConfigStore
 import com.gothwad.computer.data.LauncherConfig
-import com.gothwad.computer.data.MODE_TV
 import com.gothwad.computer.databinding.LayoutPcSettingsSystemBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -19,8 +18,7 @@ import kotlinx.coroutines.launch
 class PcSettingsSystemPage(
     private val context: Context,
     private val scope: CoroutineScope,
-    private var config: LauncherConfig,
-    private val onSwitchToTvMode: () -> Unit
+    private var config: LauncherConfig
 ) {
     private var _binding: LayoutPcSettingsSystemBinding? = null
     val binding get() = _binding!!
@@ -41,13 +39,6 @@ class PcSettingsSystemPage(
         val model = Build.MODEL ?: "Android PC"
         binding.tvSystemPcName.text = "Gothwad-PC ($model)"
         binding.tvSystemModel.text = "Desktop Mode • Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})"
-
-        binding.btnSwitchTvMode.setOnClickListener {
-            scope.launch {
-                ConfigStore(context).update { it.copy(launcherMode = MODE_TV) }
-                onSwitchToTvMode()
-            }
-        }
     }
 
     private fun updateCardLabels() {

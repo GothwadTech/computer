@@ -66,15 +66,6 @@
                     android:textColor="#8E95A5"
                     android:textSize="12sp" />
             </LinearLayout>
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_switch_tv_mode"
-                style="@style/Widget.Material3.Button.TonalButton"
-                android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:text="Switch to TV Mode"
-                android:textSize="11sp"
-                app:cornerRadius="6dp" />
         </LinearLayout>
 
         <!-- System Cards Container -->

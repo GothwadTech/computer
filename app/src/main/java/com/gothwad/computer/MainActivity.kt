@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.res.Configuration
 import android.os.Bundle
+import android.view.KeyEvent
 import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
@@ -13,40 +14,25 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.navigation.fragment.NavHostFragment
 import com.gothwad.computer.data.AppEntry
 import com.gothwad.computer.data.AppRepository
-import com.gothwad.computer.data.BackgroundMediaState
-import com.gothwad.computer.data.BackgroundMediaTracker
 import com.gothwad.computer.data.BluetoothDeviceStatus
 import com.gothwad.computer.data.ConfigStore
 import com.gothwad.computer.data.LauncherConfig
 import com.gothwad.computer.data.MODE_PC
 import com.gothwad.computer.data.NetStatus
-import com.gothwad.computer.data.bluetoothStatusFlow
-import com.gothwad.computer.data.networkStatusFlow
 import com.gothwad.computer.databinding.ActivityMainBinding
-import com.gothwad.computer.service.NotificationManagerBridge
-import com.gothwad.computer.ui.dialogs.BackgroundMediaDialogFragment
 import com.gothwad.computer.ui.dialogs.NotificationBottomSheetFragment
 import com.gothwad.computer.ui.dialogs.PinEntryDialogFragment
 import com.gothwad.computer.ui.dialogs.QuickDashboardDialogFragment
 import com.gothwad.computer.ui.dialogs.SearchDialogFragment
-import com.gothwad.computer.ui.dialogs.SettingsBottomSheetFragment
-import com.gothwad.computer.ui.dialogs.SetupWizardDialogFragment
-import com.gothwad.computer.ui.dialogs.VoiceSearchDialogFragment
-import com.gothwad.computer.ui.tv.TvLauncherFragment
+import com.gothwad.computer.ui.pc.settings.PcSettingsConstants
+import com.gothwad.computer.ui.pc.settings.PcSettingsDialogFragment
 import com.gothwad.computer.ui.view.DeviceLockViewController
-import android.view.KeyEvent
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
@@ -57,48 +43,25 @@ class MainActivity : AppCompatActivity() {
     var rescanTick: Int = 0
         private set
 
-    private var currentConfig: LauncherConfig = LauncherConfig()
+    private var currentConfig: LauncherConfig = LauncherConfig(launcherMode = MODE_PC)
     private var currentNetStatus: NetStatus = NetStatus()
     private var currentBtStatus: BluetoothDeviceStatus = BluetoothDeviceStatus()
-    private var currentMediaState: BackgroundMediaState = BackgroundMediaState()
     private var allApps: List<AppEntry> = emptyList()
 
     private val packageReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val pkg = intent.data?.schemeSpecificPart
-            val launchable = pkg != null && (
-                packageManager.getLeanbackLaunchIntentForPackage(pkg) != null ||
-                    packageManager.getLaunchIntentForPackage(pkg) != null
-                )
+            val launchable = pkg != null && packageManager.getLaunchIntentForPackage(pkg) != null
             if (intent.action == Intent.ACTION_PACKAGE_REMOVED || launchable) {
                 rescanTick++
-                notifyFragmentRescan()
                 refreshAppsList()
             }
-        }
-    }
-
-    private val a11yAlertReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            checkAccessibilityState()
-        }
-    }
-
-    private fun notifyFragmentRescan() {
-        val navHostFragment = supportFragmentManager
-            .findFragmentById(R.id.nav_host_fragment) as? NavHostFragment
-        val currentFragment = navHostFragment?.childFragmentManager?.fragments?.firstOrNull()
-        if (currentFragment is TvLauncherFragment) {
-            currentFragment.onRescanRequested()
         }
     }
 
     private fun refreshAppsList() {
         lifecycleScope.launch(Dispatchers.IO) {
             allApps = AppRepository.scan(this@MainActivity)
-            val store = ConfigStore(this@MainActivity)
-            val installedPackages = allApps.map { it.pkg }.toSet()
-            com.gothwad.computer.data.ButtonMappingManager.seedDefaultMappings(store, installedPackages)
         }
     }
 
@@ -127,7 +90,7 @@ class MainActivity : AppCompatActivity() {
             )
         }
 
-        // A home screen never exits on Back
+        // A home screen / desktop emulator never exits on Back
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() { /* no-op */ }
         })
@@ -147,13 +110,10 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Phase 4: Device Lock on cold launcher process start
+        // Device Lock on cold start
         checkDeviceLockOnColdStart()
 
-        setupA11yRecoveryBanner()
-        setupNavigation()
-        setupStatusBar()
-        observeStatusBarData()
+        observeConfig()
         refreshAppsList()
     }
 
@@ -165,7 +125,6 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        // Show solid lock container immediately so not even a single frame of home UI is leaked
         binding.deviceLockContainer.visibility = View.VISIBLE
         binding.deviceLockContainer.bringToFront()
 
@@ -190,27 +149,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupA11yRecoveryBanner() {
-        binding.bannerA11yRecovery.btnA11yAction.setOnClickListener {
-            Actions.openAccessibilitySettings(this)
-        }
-        binding.bannerA11yRecovery.btnA11yDismiss.setOnClickListener {
-            binding.bannerA11yRecovery.cardA11yBanner.visibility = View.GONE
-        }
-
-        // Register receiver for watchdog alerts
-        ContextCompat.registerReceiver(
-            this,
-            a11yAlertReceiver,
-            IntentFilter(com.gothwad.computer.service.LauncherWatchdogService.ACTION_ACCESSIBILITY_DISABLED_ALERT),
-            ContextCompat.RECEIVER_NOT_EXPORTED
-        )
-    }
-
     override fun onResume() {
         super.onResume()
-        checkAccessibilityState()
-        if (currentConfig.launcherMode == MODE_PC && currentConfig.pcOverlayTaskbarEnabled &&
+        if (currentConfig.pcOverlayTaskbarEnabled &&
             com.gothwad.computer.service.FloatingTaskbarService.canDrawOverlays(this)) {
             com.gothwad.computer.service.FloatingTaskbarService.startIfEnabled(this)
         }
@@ -228,8 +169,8 @@ class MainActivity : AppCompatActivity() {
                 ).show(supportFragmentManager, SearchDialogFragment.TAG)
             }
             "ACTION_NOTIFICATIONS" -> {
-                com.gothwad.computer.ui.dialogs.NotificationBottomSheetFragment.newInstance()
-                    .show(supportFragmentManager, com.gothwad.computer.ui.dialogs.NotificationBottomSheetFragment.TAG)
+                NotificationBottomSheetFragment.newInstance()
+                    .show(supportFragmentManager, NotificationBottomSheetFragment.TAG)
             }
             "ACTION_SETTINGS" -> {
                 openSettingsDialog()
@@ -250,126 +191,20 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun checkAccessibilityState() {
-        val disabledAfterCrash = com.gothwad.computer.data.AccessibilityStateTracker
-            .checkAccessibilityDisabledAfterCrash(this)
-
-        binding.bannerA11yRecovery.cardA11yBanner.visibility =
-            if (disabledAfterCrash) View.VISIBLE else View.GONE
-    }
-
-    private fun setupNavigation() {
-        val navHostFragment = supportFragmentManager
-            .findFragmentById(R.id.nav_host_fragment) as? NavHostFragment ?: return
-        val navController = navHostFragment.navController
-
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.CREATED) {
-                ConfigStore(this@MainActivity).flow.collectLatest { config ->
-                    val targetDest = if (config.launcherMode == MODE_PC) {
-                        R.id.pcLauncherFragment
-                    } else {
-                        R.id.tvLauncherFragment
-                    }
-
-                    if (navController.currentDestination?.id != targetDest) {
-                        val navGraph = navController.navInflater.inflate(R.navigation.nav_graph)
-                        navGraph.setStartDestination(targetDest)
-                        navController.graph = navGraph
-                    }
-                }
-            }
-        }
-    }
-
-    private fun setupStatusBar() {
-        binding.mainStatusBar.apply {
-            onDashboardClick = {
-                QuickDashboardDialogFragment.newInstance(
-                    net = currentNetStatus,
-                    bt = currentBtStatus,
-                    onOpenSettings = { openSettingsDialog() }
-                ).show(supportFragmentManager, QuickDashboardDialogFragment.TAG)
-            }
-
-            onSearchClick = {
-                SearchDialogFragment.newInstance(
-                    apps = allApps,
-                    config = currentConfig,
-                    onLaunch = { app -> handleAppLaunch(app) }
-                ).show(supportFragmentManager, SearchDialogFragment.TAG)
-            }
-
-            onVoiceSearchClick = {
-                VoiceSearchDialogFragment.newInstance(
-                    apps = allApps,
-                    onLaunch = { app -> handleAppLaunch(app) }
-                ).show(supportFragmentManager, VoiceSearchDialogFragment.TAG)
-            }
-
-            onBluetoothClick = {
-                QuickDashboardDialogFragment.newInstance(
-                    net = currentNetStatus,
-                    bt = currentBtStatus,
-                    onOpenSettings = { openSettingsDialog() }
-                ).show(supportFragmentManager, QuickDashboardDialogFragment.TAG)
-            }
-
-            onBackgroundMediaClick = {
-                BackgroundMediaDialogFragment.newInstance(
-                    state = currentMediaState
-                ).show(supportFragmentManager, BackgroundMediaDialogFragment.TAG)
-            }
-
-            onNetworkClick = {
-                Actions.openNetworkSettings(this@MainActivity)
-            }
-
-            onNotificationsClick = {
-                NotificationBottomSheetFragment.newInstance()
-                    .show(supportFragmentManager, NotificationBottomSheetFragment.TAG)
-            }
-
-            onSettingsClick = {
-                openSettingsDialog()
-            }
-        }
-    }
-
     private fun openSettingsDialog() {
         if (!GothwadApplication.hasUnlockedDeviceThisProcess && currentConfig.deviceLock.enabled) {
             return
         }
-        SettingsBottomSheetFragment.newInstance(
-            config = currentConfig,
-            apps = allApps,
-            onWallpaperChanged = {
-                val navHostFragment = supportFragmentManager
-                    .findFragmentById(R.id.nav_host_fragment) as? NavHostFragment
-                val currentFragment = navHostFragment?.childFragmentManager?.fragments?.firstOrNull()
-                if (currentFragment is TvLauncherFragment) {
-                    currentFragment.applyWallpaper()
-                }
-            },
-            onRerunWizard = { showSetupWizard() },
-            onModeSelected = { /* handled by ConfigStore */ }
-        ).show(supportFragmentManager, SettingsBottomSheetFragment.TAG)
-    }
-
-    private fun showSetupWizard() {
-        SetupWizardDialogFragment.newInstance {
-            lifecycleScope.launch {
-                ConfigStore(this@MainActivity).update { it.copy(setupDone = true) }
-            }
-        }.show(supportFragmentManager, SetupWizardDialogFragment.TAG)
+        PcSettingsDialogFragment.newInstance(
+            initialTab = PcSettingsConstants.TAB_SYSTEM,
+            onWallpaperChanged = { /* handled by config observer in PcLauncherFragment */ }
+        ).show(supportFragmentManager, PcSettingsDialogFragment.TAG)
     }
 
     private fun handleAppLaunch(app: AppEntry, skipLock: Boolean = false) {
         if (!GothwadApplication.hasUnlockedDeviceThisProcess && currentConfig.deviceLock.enabled) {
             return
         }
-        // UX-only in-launcher check to avoid overlay flicker on first click.
-        // The authoritative, unbypassable security enforcement layer is in LauncherAccessibilityService.
         if (!skipLock && currentConfig.appLock.enabled && currentConfig.appLock.value.isNotEmpty() && app.pkg in currentConfig.lockedApps) {
             PinEntryDialogFragment.newInstance(
                 title = "App Locked",
@@ -377,8 +212,6 @@ class MainActivity : AppCompatActivity() {
                 credential = currentConfig.appLock,
                 isCancelable = true,
                 onSuccess = {
-                    // Mark package as unlocked in the session so Accessibility Service won't re-prompt immediately
-                    com.gothwad.computer.service.LauncherAccessibilityService.unlockedPackagesSession.add(app.pkg)
                     handleAppLaunch(app, skipLock = true)
                 }
             ).show(supportFragmentManager, PinEntryDialogFragment.TAG)
@@ -387,64 +220,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun observeStatusBarData() {
+    private fun observeConfig() {
         val configStore = ConfigStore(this)
-
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                // 1. Config flow
-                launch {
-                    configStore.flow.collectLatest { config ->
-                        currentConfig = config
-                        binding.mainStatusBar.applyConfig(config)
-                        binding.mainStatusBar.visibility =
-                            if (config.launcherMode == MODE_PC || !config.showStatusBar) View.GONE else View.VISIBLE
-                    }
-                }
-
-                // 2. Network status flow
-                launch {
-                    networkStatusFlow(this@MainActivity).collectLatest { net ->
-                        currentNetStatus = net
-                        binding.mainStatusBar.setNetStatus(net)
-                    }
-                }
-
-                // 3. Bluetooth status flow
-                launch {
-                    bluetoothStatusFlow(this@MainActivity).flowOn(Dispatchers.IO).collectLatest { bt ->
-                        currentBtStatus = bt
-                        binding.mainStatusBar.setBluetoothStatus(bt)
-                    }
-                }
-
-                // 4. Background media flow
-                launch {
-                    BackgroundMediaTracker.backgroundMediaFlow(this@MainActivity).collectLatest { media ->
-                        currentMediaState = media
-                        binding.mainStatusBar.setBackgroundMedia(media)
-                    }
-                }
-
-                // 5. Notifications flow
-                launch {
-                    NotificationManagerBridge.notifications.collectLatest { notifs ->
-                        val hasPermission = NotificationManagerBridge.isServiceConnected.value
-                        binding.mainStatusBar.setNotificationCount(notifs.size, hasPermission)
-                    }
-                }
-
-                // 6. Clock & Date loop (Format: 16 Sep • Wed • 01:26 AM)
-                launch {
-                    while (isActive) {
-                        val now = Date()
-                        val timePattern = if (currentConfig.h24) "HH:mm" else "hh:mm a"
-                        val dateFormatted = SimpleDateFormat("d MMM • EEE", Locale.ENGLISH).format(now)
-                        val timeFormatted = SimpleDateFormat(timePattern, Locale.ENGLISH).format(now)
-                        val fullDateTime = "$dateFormatted • $timeFormatted"
-                        binding.mainStatusBar.setClockTime(fullDateTime)
-                        delay(1000)
-                    }
+                configStore.flow.collectLatest { config ->
+                    currentConfig = config
                 }
             }
         }
@@ -464,7 +245,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         runCatching { unregisterReceiver(packageReceiver) }
-        runCatching { unregisterReceiver(a11yAlertReceiver) }
         super.onDestroy()
     }
 

@@ -8,13 +8,13 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.gothwad.computer.databinding.ItemNotificationBinding
-import com.gothwad.computer.service.TvNotificationItem
+import com.gothwad.computer.service.NotificationItem
 import com.gothwad.computer.ui.AppIcons
 
 class NotificationAdapter(
-    private val onClick: (TvNotificationItem) -> Unit,
-    private val onDismiss: (TvNotificationItem) -> Unit
-) : ListAdapter<TvNotificationItem, NotificationAdapter.ViewHolder>(DIFF_CALLBACK) {
+    private val onClick: (NotificationItem) -> Unit,
+    private val onDismiss: (NotificationItem) -> Unit
+) : ListAdapter<NotificationItem, NotificationAdapter.ViewHolder>(DIFF_CALLBACK) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = ItemNotificationBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -42,7 +42,7 @@ class NotificationAdapter(
             }
         }
 
-        fun bind(item: TvNotificationItem) {
+        fun bind(item: NotificationItem) {
             binding.tvNotifTitle.text = item.title
             binding.tvNotifBody.text = if (item.text.isNotBlank()) item.text else item.subText.orEmpty()
 
@@ -63,9 +63,9 @@ class NotificationAdapter(
     }
 
     companion object {
-        private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<TvNotificationItem>() {
-            override fun areItemsTheSame(oldItem: TvNotificationItem, newItem: TvNotificationItem) = oldItem.key == newItem.key
-            override fun areContentsTheSame(oldItem: TvNotificationItem, newItem: TvNotificationItem) = oldItem == newItem
+        private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<NotificationItem>() {
+            override fun areItemsTheSame(oldItem: NotificationItem, newItem: NotificationItem) = oldItem.key == newItem.key
+            override fun areContentsTheSame(oldItem: NotificationItem, newItem: NotificationItem) = oldItem == newItem
         }
     }
 }

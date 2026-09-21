@@ -39,7 +39,6 @@ import com.gothwad.computer.data.AppEntry
 import com.gothwad.computer.data.AppRepository
 import com.gothwad.computer.data.ConfigStore
 import com.gothwad.computer.data.LauncherConfig
-import com.gothwad.computer.data.MODE_TV
 import com.gothwad.computer.data.networkStatusFlow
 import com.gothwad.computer.databinding.FragmentPcLauncherBinding
 import com.gothwad.computer.databinding.LayoutPcAppContextMenuBinding
@@ -53,8 +52,6 @@ import com.gothwad.computer.ui.pc.settings.PcSettingsConstants
 import com.gothwad.computer.ui.dialogs.NotificationBottomSheetFragment
 import com.gothwad.computer.ui.dialogs.PinEntryDialogFragment
 import com.gothwad.computer.ui.dialogs.SearchDialogFragment
-import com.gothwad.computer.ui.dialogs.SettingsBottomSheetFragment
-import com.gothwad.computer.ui.dialogs.SetupWizardDialogFragment
 import com.gothwad.computer.apps.files.FileManagerView
 import com.gothwad.computer.apps.floating.FloatingWindowManager
 import com.gothwad.computer.apps.webapp.InstallWebAppDialog
@@ -333,7 +330,6 @@ class PcLauncherFragment : Fragment() {
 
         startBinding.imgStartSearchIcon.setImageDrawable(AppIcons.createDrawable(AppIcons.PATH_SEARCH, 0xFF8AB4F8.toInt()))
         startBinding.imgUserAvatar.setImageDrawable(AppIcons.createDrawable(AppIcons.PATH_PERSON, 0xFF4FA7FA.toInt()))
-        startBinding.btnStartTvMode.setImageDrawable(AppIcons.createDrawable(AppIcons.PATH_TV, 0xFF60A5FA.toInt()))
         startBinding.btnStartSettings.setImageDrawable(AppIcons.createDrawable(AppIcons.PATH_GEAR, Color.WHITE))
 
         startBinding.startSearchContainer.setOnClickListener {
@@ -344,13 +340,6 @@ class PcLauncherFragment : Fragment() {
         startBinding.btnAllApps.setOnClickListener {
             closeAllFlyouts()
             openSearchDialog()
-        }
-
-        startBinding.btnStartTvMode.setOnClickListener {
-            closeAllFlyouts()
-            viewLifecycleOwner.lifecycleScope.launch {
-                ConfigStore(requireContext()).update { it.copy(launcherMode = MODE_TV) }
-            }
         }
 
         startBinding.btnStartSettings.setOnClickListener {
@@ -375,7 +364,7 @@ class PcLauncherFragment : Fragment() {
 
         qsBinding.imgTileWifi.setImageDrawable(AppIcons.createDrawable(AppIcons.PATH_WIFI, 0xFF4FA7FA.toInt()))
         qsBinding.imgTileHome.setImageDrawable(AppIcons.createDrawable(AppIcons.PATH_HOME, 0xFF4FA7FA.toInt()))
-        qsBinding.imgTileTv.setImageDrawable(AppIcons.createDrawable(AppIcons.PATH_TV, 0xFF60A5FA.toInt()))
+        qsBinding.imgTileSettings.setImageDrawable(AppIcons.createDrawable(AppIcons.PATH_GEAR, Color.WHITE))
         qsBinding.imgTileNotifs.setImageDrawable(AppIcons.createDrawable(AppIcons.PATH_BELL, Color.WHITE))
         qsBinding.imgQsVolume.setImageDrawable(AppIcons.createDrawable(AppIcons.PATH_VOLUME, Color.WHITE))
         qsBinding.imgQsWifi.setImageDrawable(AppIcons.createDrawable(AppIcons.PATH_WIFI, 0xFF8AB4F8.toInt()))
@@ -412,11 +401,9 @@ class PcLauncherFragment : Fragment() {
             closeAllFlyouts()
         }
 
-        qsBinding.tileQsTvMode.setOnClickListener {
+        qsBinding.tileQsSettings.setOnClickListener {
             closeAllFlyouts()
-            viewLifecycleOwner.lifecycleScope.launch {
-                ConfigStore(requireContext()).update { it.copy(launcherMode = MODE_TV) }
-            }
+            openFullSettingsDialog()
         }
 
         qsBinding.tileQsNotifs.setOnClickListener {
@@ -1223,8 +1210,7 @@ class PcLauncherFragment : Fragment() {
             return
         }
 
-        // UX-only in-launcher check to avoid overlay flicker on first click.
-        // The authoritative, unbypassable security enforcement layer is in LauncherAccessibilityService.
+        // UX in-launcher app lock check
         if (!skipLock && currentConfig.appLock.enabled && currentConfig.appLock.value.isNotEmpty() && app.pkg in currentConfig.lockedApps) {
             PinEntryDialogFragment.newInstance(
                 title = "App Locked",
@@ -1232,7 +1218,6 @@ class PcLauncherFragment : Fragment() {
                 credential = currentConfig.appLock,
                 isCancelable = true,
                 onSuccess = {
-                    com.gothwad.computer.service.LauncherAccessibilityService.unlockedPackagesSession.add(app.pkg)
                     handleAppLaunch(app, skipLock = true)
                 }
             ).show(parentFragmentManager, PinEntryDialogFragment.TAG)
@@ -1335,14 +1320,6 @@ class PcLauncherFragment : Fragment() {
             initialTab = initialTab,
             onWallpaperChanged = { applyWallpaper() }
         ).show(parentFragmentManager, PcSettingsDialogFragment.TAG)
-    }
-
-    private fun showSetupWizard() {
-        SetupWizardDialogFragment.newInstance {
-            viewLifecycleOwner.lifecycleScope.launch {
-                ConfigStore(requireContext()).update { it.copy(setupDone = true) }
-            }
-        }.show(parentFragmentManager, SetupWizardDialogFragment.TAG)
     }
 
     private fun observeData() {

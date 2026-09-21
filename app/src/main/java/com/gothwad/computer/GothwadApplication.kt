@@ -9,7 +9,6 @@ import android.content.Intent
 import android.os.SystemClock
 import android.util.Log
 import com.gothwad.computer.data.AppLaunchTracker
-import com.gothwad.computer.service.LauncherWatchdogService
 import java.io.File
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -40,10 +39,9 @@ class GothwadApplication : Application() {
         val currentProc = com.gothwad.computer.data.ProcessHelper.currentProcessName()
         Log.i(TAG, "GothwadApplication initialized in process: $currentProc")
 
-        // Only initialize main process handlers & watchdog from the main process
+        // Only initialize main process handlers from the main process
         if (currentProc.isEmpty() || currentProc == packageName) {
             setupCrashSelfHealing()
-            LauncherWatchdogService.start(this)
         }
     }
 

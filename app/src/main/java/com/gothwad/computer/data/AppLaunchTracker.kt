@@ -3,7 +3,6 @@ package com.gothwad.computer.data
 import android.app.ActivityManager
 import android.content.Context
 import android.util.Log
-import com.gothwad.computer.service.LauncherAccessibilityService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -84,8 +83,7 @@ object AppLaunchTracker {
                             val pkg = lruList[i]
                             if (pkg != myPkg &&
                                 pkg != mostRecentPkg &&
-                                pkg !in PROTECTED_PACKAGES &&
-                                !LauncherAccessibilityService.isStockTvLauncher(pkg)
+                                pkg !in PROTECTED_PACKAGES
                             ) {
                                 targetsToKill.add(pkg)
                             }

@@ -14,13 +14,13 @@
         android:clickable="true"
         android:focusable="false" />
 
-    <!-- Android TV Slide-in Left Side Panel -->
+    <!-- PC Slide-in Notifications Panel -->
     <LinearLayout
         android:id="@+id/panel_container"
         android:layout_width="370dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        android:background="@drawable/bg_tv_notifications_panel"
+        android:background="@drawable/bg_pc_notifications_panel"
         android:clickable="true"
         android:elevation="20dp"
         android:focusable="false"

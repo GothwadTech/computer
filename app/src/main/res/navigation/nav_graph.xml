@@ -3,13 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/tvLauncherFragment">
-
-    <fragment
-        android:id="@+id/tvLauncherFragment"
-        android:name="com.gothwad.computer.ui.tv.TvLauncherFragment"
-        android:label="TvLauncherFragment"
-        tools:layout="@layout/fragment_tv_launcher" />
+    app:startDestination="@id/pcLauncherFragment">
 
     <fragment
         android:id="@+id/pcLauncherFragment"

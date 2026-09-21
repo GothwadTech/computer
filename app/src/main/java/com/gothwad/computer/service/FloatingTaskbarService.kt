@@ -20,7 +20,6 @@ import com.gothwad.computer.R
 import com.gothwad.computer.data.ConfigStore
 import com.gothwad.computer.data.LauncherConfig
 import com.gothwad.computer.data.MODE_PC
-import com.gothwad.computer.data.MODE_TV
 import com.gothwad.computer.databinding.LayoutFloatingTaskbarOverlayBinding
 import com.gothwad.computer.databinding.LayoutFloatingTaskbarTriggerBinding
 import com.gothwad.computer.ui.AppIcons
@@ -235,7 +234,6 @@ class FloatingTaskbarService : Service() {
         binding.imgIconSearch.setImageDrawable(AppIcons.createDrawable(AppIcons.PATH_SEARCH, Color.WHITE))
         binding.imgIconNotifs.setImageDrawable(AppIcons.createDrawable(AppIcons.PATH_BELL, Color.WHITE))
         binding.imgIconVolume.setImageDrawable(AppIcons.createDrawable(AppIcons.PATH_VOLUME, Color.WHITE))
-        binding.imgIconTv.setImageDrawable(AppIcons.createDrawable(AppIcons.PATH_TV, 0xFF60A5FA.toInt()))
         binding.imgIconSettings.setImageDrawable(AppIcons.createDrawable(AppIcons.PATH_GEAR, Color.WHITE))
 
         // Scrim barrier dismisses menu
@@ -282,16 +280,7 @@ class FloatingTaskbarService : Service() {
             launchHomeWithAction("ACTION_QUICK_SETTINGS")
         }
 
-        // 7. TV Mode
-        binding.itemMenuTvMode.setOnClickListener {
-            closeMenu()
-            serviceScope.launch {
-                ConfigStore(applicationContext).update { it.copy(launcherMode = MODE_TV) }
-            }
-            launchHome()
-        }
-
-        // 8. Settings
+        // 7. Settings
         binding.itemMenuSettings.setOnClickListener {
             closeMenu()
             launchHomeWithAction("ACTION_SETTINGS")

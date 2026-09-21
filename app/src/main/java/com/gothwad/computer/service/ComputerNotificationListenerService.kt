@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-data class TvNotificationItem(
+data class NotificationItem(
     val key: String,
     val packageName: String,
     val appName: String,
@@ -27,17 +27,19 @@ data class TvNotificationItem(
     val isClearable: Boolean = true,
 )
 
+typealias TvNotificationItem = NotificationItem
+
 object NotificationManagerBridge {
-    private val _notifications = MutableStateFlow<List<TvNotificationItem>>(emptyList())
-    val notifications: StateFlow<List<TvNotificationItem>> = _notifications.asStateFlow()
+    private val _notifications = MutableStateFlow<List<NotificationItem>>(emptyList())
+    val notifications: StateFlow<List<NotificationItem>> = _notifications.asStateFlow()
 
     private val _isServiceConnected = MutableStateFlow(false)
     val isServiceConnected: StateFlow<Boolean> = _isServiceConnected.asStateFlow()
 
-    var activeService: TvNotificationListenerService? = null
+    var activeService: ComputerNotificationListenerService? = null
         internal set
 
-    fun updateNotifications(items: List<TvNotificationItem>) {
+    fun updateNotifications(items: List<NotificationItem>) {
         _notifications.value = items
     }
 
@@ -65,7 +67,7 @@ object NotificationManagerBridge {
         }
     }
 
-    fun launchNotification(context: Context, item: TvNotificationItem) {
+    fun launchNotification(context: Context, item: NotificationItem) {
         val pi = item.contentIntent
         if (pi != null) {
             runCatching {
@@ -73,8 +75,7 @@ object NotificationManagerBridge {
             }.onFailure {
                 // Fallback: try launching the app directly
                 val pm = context.packageManager
-                val intent = pm.getLeanbackLaunchIntentForPackage(item.packageName)
-                    ?: pm.getLaunchIntentForPackage(item.packageName)
+                val intent = pm.getLaunchIntentForPackage(item.packageName)
                 if (intent != null) {
                     intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
                     context.startActivity(intent)
@@ -82,8 +83,7 @@ object NotificationManagerBridge {
             }
         } else {
             val pm = context.packageManager
-            val intent = pm.getLeanbackLaunchIntentForPackage(item.packageName)
-                ?: pm.getLaunchIntentForPackage(item.packageName)
+            val intent = pm.getLaunchIntentForPackage(item.packageName)
             if (intent != null) {
                 intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
                 context.startActivity(intent)
@@ -92,7 +92,7 @@ object NotificationManagerBridge {
     }
 }
 
-class TvNotificationListenerService : NotificationListenerService() {
+class ComputerNotificationListenerService : NotificationListenerService() {
 
     override fun onListenerConnected() {
         super.onListenerConnected()
@@ -121,7 +121,7 @@ class TvNotificationListenerService : NotificationListenerService() {
         runCatching {
             val sbns = activeNotifications ?: return
             val pm = packageManager
-            val items = mutableListOf<TvNotificationItem>()
+            val items = mutableListOf<NotificationItem>()
 
             for (sbn in sbns) {
                 val n = sbn.notification ?: continue
@@ -154,7 +154,7 @@ class TvNotificationListenerService : NotificationListenerService() {
                 val isClearable = sbn.isClearable
 
                 items.add(
-                    TvNotificationItem(
+                    NotificationItem(
                         key = sbn.key,
                         packageName = sbn.packageName,
                         appName = appName,

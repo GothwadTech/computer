@@ -19,8 +19,7 @@ import com.gothwad.computer.ui.AppIcons
 
 /**
  * Full-screen System Alert Window Overlay hosting the security lock UI directly via WindowManager.
- * Used by LauncherAccessibilityService to block access to locked apps system-wide
- * (Settings app, notifications, recents switcher, etc.) and by MainActivity for Device Lock.
+ * Used for Desktop Lock and locked apps system-wide.
  */
 class SystemLockOverlayView(
     private val context: Context,
@@ -325,9 +324,7 @@ class SystemLockOverlayView(
     fun show() {
         if (isAttached) return
 
-        val overlayType = if (context is android.accessibilityservice.AccessibilityService) {
-            WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val overlayType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
         } else {
             @Suppress("DEPRECATION")

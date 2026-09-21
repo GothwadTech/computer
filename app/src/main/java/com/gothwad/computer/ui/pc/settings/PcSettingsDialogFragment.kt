@@ -135,8 +135,7 @@ class PcSettingsDialogFragment : DialogFragment() {
         systemPage = PcSettingsSystemPage(
             context = requireContext(),
             scope = viewLifecycleOwner.lifecycleScope,
-            config = currentConfig,
-            onSwitchToTvMode = { dismiss() }
+            config = currentConfig
         )
 
         otherTabs = PcSettingsOtherTabs(

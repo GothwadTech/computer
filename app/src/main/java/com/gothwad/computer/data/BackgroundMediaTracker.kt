@@ -13,8 +13,7 @@ import android.media.session.MediaSessionManager
 import android.media.session.PlaybackState
 import android.os.Build
 import android.provider.Settings
-import com.gothwad.computer.service.LauncherAccessibilityService
-import com.gothwad.computer.service.TvNotificationListenerService
+import com.gothwad.computer.service.ComputerNotificationListenerService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -40,7 +39,7 @@ object BackgroundMediaTracker {
         val mediaSessionManager = runCatching {
             context.getSystemService(Context.MEDIA_SESSION_SERVICE) as? MediaSessionManager
         }.getOrNull()
-        val notificationComponent = ComponentName(context, TvNotificationListenerService::class.java)
+        val notificationComponent = ComponentName(context, ComputerNotificationListenerService::class.java)
 
         while (true) {
             val isMusicActive = audioManager?.isMusicActive == true
@@ -70,7 +69,6 @@ object BackgroundMediaTracker {
                 }.getOrNull() ?: activePkg
             }
 
-            val isStock = activePkg != null && LauncherAccessibilityService.isStockTvLauncher(activePkg)
             val isPlaying = isMusicActive || activePkg != null
 
             emit(
@@ -79,7 +77,7 @@ object BackgroundMediaTracker {
                     packageName = activePkg,
                     appName = activeAppName ?: if (isPlaying) "Background Audio" else null,
                     title = activeTitle,
-                    isStockAdCandidate = isStock || (isPlaying && activePkg == null),
+                    isStockAdCandidate = false,
                 )
             )
 
@@ -121,7 +119,7 @@ object BackgroundMediaTracker {
         val mediaSessionManager = runCatching {
             context.getSystemService(Context.MEDIA_SESSION_SERVICE) as? MediaSessionManager
         }.getOrNull() ?: return
-        val notificationComponent = ComponentName(context, TvNotificationListenerService::class.java)
+        val notificationComponent = ComponentName(context, ComputerNotificationListenerService::class.java)
 
         runCatching {
             val controllers = mediaSessionManager.getActiveSessions(notificationComponent)

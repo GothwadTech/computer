@@ -90,8 +90,8 @@ data class LauncherConfig(
     val appLock: LockCredential = LockCredential(),
     val hiddenAppsLock: LockCredential = LockCredential(),
     val hiddenAppsRevealCode: String = "",
-    /** launcher mode: 0 = TV, 1 = PC Desktop */
-    val launcherMode: Int = MODE_TV,
+    /** launcher mode: PC Desktop */
+    val launcherMode: Int = MODE_PC,
     // ----- PC Desktop settings -----
     val pcWallpaper: Int = 0,
     val pcUseCustomWallpaper: Boolean = false,
@@ -128,19 +128,14 @@ class ConfigStore(private val context: Context) {
     val flow: Flow<LauncherConfig> = context.dataStore.data.map { prefs ->
         prefs[key]?.let {
             runCatching { json.decodeFromString<LauncherConfig>(it) }.getOrNull()
-        } ?: LauncherConfig(
-            // On fresh install on a touch-first non-TV device, default to PC mode
-            launcherMode = if (isProbablyTouchDevice(context)) MODE_PC else MODE_TV
-        )
+        } ?: LauncherConfig(launcherMode = MODE_PC)
     }
 
     suspend fun update(transform: (LauncherConfig) -> LauncherConfig) {
         context.dataStore.edit { prefs ->
             val current = prefs[key]?.let {
                 runCatching { json.decodeFromString<LauncherConfig>(it) }.getOrNull()
-            } ?: LauncherConfig(
-                launcherMode = if (isProbablyTouchDevice(context)) MODE_PC else MODE_TV
-            )
+            } ?: LauncherConfig(launcherMode = MODE_PC)
             val updated = transform(current)
             prefs[key] = json.encodeToString(updated)
         }
