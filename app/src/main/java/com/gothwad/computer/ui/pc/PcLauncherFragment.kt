@@ -1364,6 +1364,14 @@ class PcLauncherFragment : Fragment() {
                         updateVisibleApps()
                         updatePinnedApps()
 
+                        binding.btnSearch.visibility = if (config.pcShowTaskbarSearch) View.VISIBLE else View.GONE
+
+                        if (config.pcKeepScreenOn) {
+                            activity?.window?.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                        } else {
+                            activity?.window?.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                        }
+
                         if (prevConfig.pcUiScale != config.pcUiScale ||
                             prevConfig.pcIconSize != config.pcIconSize ||
                             prevConfig.pcShowLabels != config.pcShowLabels ||
@@ -1436,9 +1444,18 @@ class PcLauncherFragment : Fragment() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 while (isActive) {
                     val now = Date()
-                    val timePattern = if (currentConfig.h24) "HH:mm" else "hh:mm a"
+                    val timePattern = if (currentConfig.h24) {
+                        if (currentConfig.pcShowTaskbarClockSeconds) "HH:mm:ss" else "HH:mm"
+                    } else {
+                        if (currentConfig.pcShowTaskbarClockSeconds) "hh:mm:ss a" else "hh:mm a"
+                    }
                     val timeStr = SimpleDateFormat(timePattern, Locale.ENGLISH).format(now)
-                    val dateStr = SimpleDateFormat("d MMM • EEE", Locale.ENGLISH).format(now)
+                    val datePattern = when (currentConfig.pcDateFormat) {
+                        "MM/DD/YYYY" -> "MM/dd/yyyy"
+                        "YYYY-MM-DD" -> "yyyy-MM-dd"
+                        else -> "dd/MM/yyyy"
+                    }
+                    val dateStr = SimpleDateFormat(datePattern, Locale.ENGLISH).format(now)
 
                     binding.tvTaskbarTime.text = timeStr
                     binding.tvTaskbarDate.text = dateStr

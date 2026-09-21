@@ -6,39 +6,49 @@ import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.view.LayoutInflater
 import android.view.View
-import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.TextView
+import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.gothwad.computer.R
 import com.gothwad.computer.data.ConfigStore
 import com.gothwad.computer.data.LauncherConfig
+import com.gothwad.computer.databinding.ItemPcSettingCardBinding
 import com.gothwad.computer.databinding.LayoutPcSettingsPersonalisationBinding
-import com.gothwad.computer.ui.ACCENTS
 import com.gothwad.computer.ui.PC_WALLPAPERS
 import com.gothwad.computer.ui.PcWallpaperPreset
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.File
 
 class PcSettingsPersonalisationPage(
     private val context: Context,
     private val scope: CoroutineScope,
     private var config: LauncherConfig,
-    private val onWallpaperChanged: () -> Unit,
-    private val onPickCustomPhoto: () -> Unit,
-    private val onOpenLockSetup: () -> Unit
+    private val pickWallpaperLauncher: ActivityResultLauncher<String>,
+    private val onOpenLockSetup: () -> Unit,
+    private val onConfigChanged: ((LauncherConfig) -> Unit)? = null
 ) {
     private var _binding: LayoutPcSettingsPersonalisationBinding? = null
     val binding get() = _binding!!
 
-    private lateinit var wallpaperAdapter: PcWallpaperAdapter
+    private var wallpaperAdapter: PcWallpaperAdapter? = null
+
+    private val accentColors = listOf(
+        0xFF0078D4.toInt(), // Windows Blue
+        0xFF00B294.toInt(), // Mint Teal
+        0xFF107C41.toInt(), // Forest Green
+        0xFFD83B01.toInt(), // Sunset Orange
+        0xFFE81123.toInt(), // Crimson Red
+        0xFF8E8CD8.toInt(), // Lavender Purple
+        0xFFB146C2.toInt(), // Orchid Magenta
+        0xFFFF8C00.toInt()  // Amber Gold
+    )
 
     fun createView(inflater: LayoutInflater): View {
         _binding = LayoutPcSettingsPersonalisationBinding.inflate(inflater, null, false)
-        setupHeroPreview()
-        setupWallpaperList()
+        setupTopPreview()
+        setupWallpaperRecycler()
         setupAccentColors()
         setupCards()
         return binding.root
@@ -46,97 +56,87 @@ class PcSettingsPersonalisationPage(
 
     fun updateConfig(newConfig: LauncherConfig) {
         config = newConfig
-        updateHeroPreview()
-        if (::wallpaperAdapter.isInitialized) {
-            wallpaperAdapter.setSelection(config.pcWallpaper, config.pcUseCustomWallpaper)
-        }
+        setupTopPreview()
+        wallpaperAdapter?.setSelection(config.pcWallpaper, config.pcUseCustomWallpaper)
+        setupCards()
     }
 
-    private fun setupHeroPreview() {
-        updateHeroPreview()
-
-        binding.btnBrowseCustomWallpaper.setOnClickListener {
-            onPickCustomPhoto()
-        }
-
-        binding.btnResetDefaultWallpaper.setOnClickListener {
-            applyPresetWallpaper(PC_WALLPAPERS[0])
-        }
-    }
-
-    private fun updateHeroPreview() {
+    private fun setupTopPreview() {
+        val b = _binding ?: return
         if (config.pcUseCustomWallpaper) {
             val file = File(context.filesDir, "wallpaper_pc.jpg")
             val fallback = File(context.filesDir, "wallpaper.jpg")
             val target = if (file.exists()) file else fallback
             if (target.exists()) {
-                scope.launch {
-                    val bmp = withContext(Dispatchers.IO) {
-                        BitmapFactory.decodeFile(target.absolutePath)
-                    }
-                    if (bmp != null) {
-                        binding.imgHeroPreview.setImageBitmap(bmp)
-                        binding.tvCurrentWallpaperName.text = "Custom Image"
-                    }
+                val bmp = BitmapFactory.decodeFile(target.absolutePath)
+                if (bmp != null) {
+                    b.imgHeroPreview.setImageBitmap(bmp)
+                    b.tvCurrentWallpaperName.text = "Custom User Wallpaper"
+                } else {
+                    applyPresetPreview(b)
                 }
-                return
+            } else {
+                applyPresetPreview(b)
             }
+        } else {
+            applyPresetPreview(b)
         }
 
-        val idx = config.pcWallpaper.coerceIn(0, PC_WALLPAPERS.size - 1)
-        val preset = PC_WALLPAPERS[idx]
-        binding.imgHeroPreview.setImageResource(preset.resId)
-        binding.tvCurrentWallpaperName.text = preset.name
+        b.btnBrowseCustomWallpaper.setOnClickListener {
+            pickWallpaperLauncher.launch("image/*")
+        }
+
+        b.btnResetDefaultWallpaper.setOnClickListener {
+            updateConfigProperty { it.copy(pcWallpaper = 0, pcUseCustomWallpaper = false) }
+            Toast.makeText(context, "Default Windows 11 wallpaper restored", Toast.LENGTH_SHORT).show()
+        }
     }
 
-    private fun setupWallpaperList() {
+    private fun applyPresetPreview(b: LayoutPcSettingsPersonalisationBinding) {
+        val idx = config.pcWallpaper.coerceIn(0, PC_WALLPAPERS.size - 1)
+        val preset = PC_WALLPAPERS[idx]
+        b.imgHeroPreview.setImageResource(preset.resId)
+        b.tvCurrentWallpaperName.text = preset.name
+    }
+
+    private fun setupWallpaperRecycler() {
+        val b = _binding ?: return
         wallpaperAdapter = PcWallpaperAdapter(
             selectedId = config.pcWallpaper,
             isCustomSelected = config.pcUseCustomWallpaper
         ) { preset ->
-            applyPresetWallpaper(preset)
+            updateConfigProperty { it.copy(pcWallpaper = preset.id, pcUseCustomWallpaper = false) }
+            Toast.makeText(context, "Applied ${preset.name}", Toast.LENGTH_SHORT).show()
         }
-        binding.recyclerWallpapers.adapter = wallpaperAdapter
-    }
-
-    private fun applyPresetWallpaper(preset: PcWallpaperPreset) {
-        scope.launch {
-            ConfigStore(context).update {
-                it.copy(pcWallpaper = preset.id, pcUseCustomWallpaper = false)
-            }
-            config = config.copy(pcWallpaper = preset.id, pcUseCustomWallpaper = false)
-            updateHeroPreview()
-            wallpaperAdapter.setSelection(preset.id, false)
-            onWallpaperChanged()
-        }
+        b.recyclerWallpapers.adapter = wallpaperAdapter
     }
 
     private fun setupAccentColors() {
-        val container = binding.layoutAccentDots
+        val b = _binding ?: return
+        val container = b.layoutAccentDots
         container.removeAllViews()
-        val density = context.resources.displayMetrics.density
-        val size = (32 * density).toInt()
-        val margin = (6 * density).toInt()
 
-        ACCENTS.forEachIndexed { index, color ->
+        for ((index, color) in accentColors.withIndex()) {
             val dot = View(context).apply {
+                val size = 34
                 val lp = LinearLayout.LayoutParams(size, size).apply {
-                    marginEnd = margin
+                    marginEnd = 14
                 }
                 layoutParams = lp
-                background = GradientDrawable().apply {
+
+                val drawable = GradientDrawable().apply {
                     shape = GradientDrawable.OVAL
                     setColor(color)
                     if (config.accent == index) {
-                        setStroke((3 * density).toInt(), Color.WHITE)
+                        setStroke(4, Color.WHITE)
                     }
                 }
+                background = drawable
+
                 setOnClickListener {
-                    scope.launch {
-                        ConfigStore(context).update { it.copy(accent = index) }
-                        config = config.copy(accent = index)
-                        setupAccentColors()
-                    }
+                    updateConfigProperty { it.copy(accent = index) }
+                    setupAccentColors()
+                    Toast.makeText(context, "Accent colour updated", Toast.LENGTH_SHORT).show()
                 }
             }
             container.addView(dot)
@@ -144,105 +144,219 @@ class PcSettingsPersonalisationPage(
     }
 
     private fun setupCards() {
-        setupCardRow(
-            root = binding.cardBackground,
+        val b = _binding ?: return
+
+        // 1. Background
+        val currentPresetName = PC_WALLPAPERS.getOrNull(config.pcWallpaper)?.name ?: "Preset ${config.pcWallpaper}"
+        bindCard(
+            root = b.cardBackground,
             iconRes = R.drawable.ic_win_personalisation,
             title = "Background",
-            subtitle = "Background image, colour, slideshow"
+            subtitle = "Choose wallpaper, fit mode, and custom photos",
+            value = if (config.pcUseCustomWallpaper) "Custom" else currentPresetName
         ) {
-            binding.recyclerWallpapers.smoothScrollToPosition(0)
+            b.recyclerWallpapers.smoothScrollToPosition(0)
+            Toast.makeText(context, "Select wallpaper above or browse custom photo", Toast.LENGTH_SHORT).show()
         }
 
-        setupCardRow(
-            root = binding.cardColours,
+        // 2. Colours
+        bindCard(
+            root = b.cardColours,
             iconRes = R.drawable.ic_win_personalisation,
-            title = "Colours",
-            subtitle = "Accent colours, transparency effects"
+            title = "Colours & Transparency",
+            subtitle = "Accent colours, Mica effects, and transparency",
+            value = "Customize"
         ) {
-            binding.containerAccentColors.visibility =
-                if (binding.containerAccentColors.visibility == View.VISIBLE) View.GONE else View.VISIBLE
+            b.containerAccentColors.visibility =
+                if (b.containerAccentColors.visibility == View.VISIBLE) View.GONE else View.VISIBLE
         }
 
-        setupCardRow(
-            root = binding.cardThemes,
+        // 3. Themes (Light / Dark Mode)
+        bindCard(
+            root = b.cardThemes,
             iconRes = R.drawable.ic_win_personalisation,
-            title = "Themes",
-            subtitle = "Install, create, manage presets"
-        )
+            title = "Windows Theme Mode",
+            subtitle = if (config.pcThemeMode == 1) "Light Theme" else "Dark Theme (Mica acrylic)",
+            value = if (config.pcThemeMode == 1) "Light" else "Dark"
+        ) {
+            val modes = listOf("Dark Theme (Default Windows 11)", "Light Theme")
+            PcSettingCardHelper.showSingleChoiceDialog(
+                context = context,
+                title = "Theme Mode",
+                options = modes,
+                selectedIndex = config.pcThemeMode.coerceIn(0, 1)
+            ) { selected ->
+                updateConfigProperty { it.copy(pcThemeMode = selected) }
+                Toast.makeText(context, "Theme set to ${modes[selected]}", Toast.LENGTH_SHORT).show()
+            }
+        }
 
-        setupCardRow(
-            root = binding.cardLockScreen,
+        // 4. Lock Screen
+        bindCard(
+            root = b.cardLockScreen,
             iconRes = R.drawable.ic_win_privacy,
             title = "Lock screen",
-            subtitle = "Lock screen credentials, PIN protection"
+            subtitle = if (config.deviceLock.enabled) "PIN Lock Active (${config.deviceLock.pinLength}-digit)" else "Unprotected • Click to set PIN",
+            value = if (config.deviceLock.enabled) "Active" else "Off"
         ) {
             onOpenLockSetup()
         }
 
-        setupCardRow(
-            root = binding.cardTouchKeyboard,
+        // 5. Touch Controls & Virtual Gamepad
+        bindCard(
+            root = b.cardTouchKeyboard,
             iconRes = R.drawable.ic_win_accessibility,
-            title = "Touch keyboard",
-            subtitle = "Theme, size, handwriting input"
+            title = "Touchscreen Controls",
+            subtitle = "Show on-screen touch navigation & virtual controls",
+            switchChecked = config.pcTouchGamepad,
+            onSwitchChanged = { isChecked ->
+                updateConfigProperty { it.copy(pcTouchGamepad = isChecked) }
+                Toast.makeText(context, if (isChecked) "Touch gamepad enabled" else "Touch gamepad disabled", Toast.LENGTH_SHORT).show()
+            }
         )
 
-        setupCardRow(
-            root = binding.cardStart,
+        // 6. Start Menu Style
+        bindCard(
+            root = b.cardStart,
             iconRes = R.drawable.ic_win_apps,
-            title = "Start",
-            subtitle = "Show recently added apps, folder layouts"
+            title = "Start Menu",
+            subtitle = "Layout: ${if (config.pcStartMenuClassic) "Windows 10 Classic List" else "Windows 11 Centered Grid"} • Recent files: ${if (config.pcShowRecentInStart) "On" else "Off"}",
+            value = if (config.pcStartMenuClassic) "Win 10" else "Win 11"
         ) {
-            scope.launch {
-                val newAuto = !config.autoCategoryOnInstall
-                ConfigStore(context).update { it.copy(autoCategoryOnInstall = newAuto) }
-                config = config.copy(autoCategoryOnInstall = newAuto)
-            }
+            showStartMenuDialog()
         }
 
-        setupCardRow(
-            root = binding.cardTaskbar,
+        // 7. Taskbar Behaviours & Pins
+        bindCard(
+            root = b.cardTaskbar,
             iconRes = R.drawable.ic_win_system,
-            title = "Taskbar",
-            subtitle = "Taskbar behaviours, system pins, center alignment"
+            title = "Taskbar Behaviours & Pins",
+            subtitle = "Alignment: ${if (config.pcTaskbarCenter) "Center" else "Left"} • Height: ${config.pcTaskbarHeight}dp • Search: ${if (config.pcShowTaskbarSearch) "Visible" else "Hidden"}",
+            value = if (config.pcTaskbarCenter) "Center" else "Left"
         ) {
-            scope.launch {
-                val newCenter = !config.pcTaskbarCenter
-                ConfigStore(context).update { it.copy(pcTaskbarCenter = newCenter) }
-                config = config.copy(pcTaskbarCenter = newCenter)
-            }
+            showTaskbarDialog()
         }
 
-        setupCardRow(
-            root = binding.cardFonts,
+        // 8. Fonts
+        bindCard(
+            root = b.cardFonts,
             iconRes = R.drawable.ic_win_personalisation,
-            title = "Fonts",
-            subtitle = "Installed system typography"
-        )
+            title = "Fonts & Typography",
+            subtitle = "Segoe UI Variable • Subpixel glyph rendering",
+            value = "Segoe UI"
+        ) {
+            PcSettingCardHelper.showInfoDialog(
+                context = context,
+                title = "Installed Typography",
+                message = "Font Family: Segoe UI Variable\nWeights: Regular, Medium, SemiBold, Bold\nRendering: Native Skia Vector Rendering\n\nOptimized for high-DPI displays and desktop clarity."
+            )
+        }
 
-        setupCardRow(
-            root = binding.cardDeviceUsage,
+        // 9. Desktop System Icons
+        bindCard(
+            root = b.cardDeviceUsage,
             iconRes = R.drawable.ic_win_system,
-            title = "Device usage",
-            subtitle = "Select all the ways you plan to use your device"
+            title = "Desktop System Icons",
+            subtitle = "Show This PC, Recycle Bin, and File Explorer on desktop",
+            switchChecked = config.pcShowSystemIconsOnDesktop,
+            onSwitchChanged = { isChecked ->
+                updateConfigProperty { it.copy(pcShowSystemIconsOnDesktop = isChecked) }
+                Toast.makeText(context, if (isChecked) "System icons visible on desktop" else "System icons hidden", Toast.LENGTH_SHORT).show()
+            }
         )
     }
 
-    private fun setupCardRow(
+    private fun showStartMenuDialog() {
+        val options = listOf(
+            "Windows 11 Centered Grid Layout",
+            "Windows 10 Classic List Layout"
+        )
+        val selectedIdx = if (config.pcStartMenuClassic) 1 else 0
+
+        PcSettingCardHelper.showSingleChoiceDialog(
+            context = context,
+            title = "Start Menu Style",
+            options = options,
+            selectedIndex = selectedIdx
+        ) { selected ->
+            val classic = (selected == 1)
+            updateConfigProperty { it.copy(pcStartMenuClassic = classic) }
+            Toast.makeText(context, "Start menu set to ${options[selected]}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun showTaskbarDialog() {
+        val options = listOf(
+            "Taskbar Alignment: ${if (config.pcTaskbarCenter) "Left Align (Win 10)" else "Center Align (Win 11)"}",
+            "Taskbar Search Box: ${if (config.pcShowTaskbarSearch) "Hide Search Box" else "Show Search Box"}",
+            "Taskbar Clock Seconds: ${if (config.pcShowTaskbarClockSeconds) "Hide Seconds" else "Show Seconds (HH:mm:ss)"}",
+            "Taskbar Height: Cycle Size (${config.pcTaskbarHeight}dp)"
+        )
+
+        MaterialAlertDialogBuilder(context, R.style.Theme_LiteTV_Dialog)
+            .setTitle("Taskbar Customization")
+            .setItems(options.toTypedArray()) { _, which ->
+                when (which) {
+                    0 -> {
+                        val newCenter = !config.pcTaskbarCenter
+                        updateConfigProperty { it.copy(pcTaskbarCenter = newCenter) }
+                    }
+                    1 -> {
+                        val newSearch = !config.pcShowTaskbarSearch
+                        updateConfigProperty { it.copy(pcShowTaskbarSearch = newSearch) }
+                    }
+                    2 -> {
+                        val newSec = !config.pcShowTaskbarClockSeconds
+                        updateConfigProperty { it.copy(pcShowTaskbarClockSeconds = newSec) }
+                    }
+                    3 -> {
+                        val newHeight = when (config.pcTaskbarHeight) {
+                            38 -> 44
+                            44 -> 50
+                            else -> 38
+                        }
+                        updateConfigProperty { it.copy(pcTaskbarHeight = newHeight) }
+                        Toast.makeText(context, "Taskbar height set to ${newHeight}dp", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            .setNegativeButton("Close", null)
+            .show()
+    }
+
+    private fun updateConfigProperty(transform: (LauncherConfig) -> LauncherConfig) {
+        scope.launch {
+            val updated = transform(config)
+            ConfigStore(context).update { updated }
+            config = updated
+            onConfigChanged?.invoke(updated)
+            setupTopPreview()
+            wallpaperAdapter?.setSelection(updated.pcWallpaper, updated.pcUseCustomWallpaper)
+            setupCards()
+        }
+    }
+
+    private fun bindCard(
         root: View,
         iconRes: Int,
         title: String,
-        subtitle: String,
+        subtitle: String? = null,
+        value: String? = null,
+        switchChecked: Boolean? = null,
+        onSwitchChanged: ((Boolean) -> Unit)? = null,
         onClick: (() -> Unit)? = null
     ) {
-        val icon = root.findViewById<ImageView>(R.id.card_row_icon)
-        val tvTitle = root.findViewById<TextView>(R.id.card_row_title)
-        val tvSub = root.findViewById<TextView>(R.id.card_row_subtitle)
-        icon?.setImageResource(iconRes)
-        tvTitle?.text = title
-        tvSub?.text = subtitle
-
-        if (onClick != null) {
-            root.setOnClickListener { onClick() }
-        }
+        val cardRowRoot = root.findViewById<View>(R.id.card_row_root) ?: root
+        val binding = ItemPcSettingCardBinding.bind(cardRowRoot)
+        PcSettingCardHelper.bindCard(
+            binding = binding,
+            iconRes = iconRes,
+            title = title,
+            subtitle = subtitle,
+            value = value,
+            switchChecked = switchChecked,
+            onSwitchChanged = onSwitchChanged,
+            onClick = onClick
+        )
     }
 }

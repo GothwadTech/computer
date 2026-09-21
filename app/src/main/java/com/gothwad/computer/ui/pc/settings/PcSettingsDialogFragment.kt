@@ -11,10 +11,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.Window
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
-import android.widget.Toast
 import com.gothwad.computer.data.ConfigStore
 import com.gothwad.computer.data.LauncherConfig
 import com.gothwad.computer.databinding.DialogPcSettingsBinding
@@ -83,6 +83,7 @@ class PcSettingsDialogFragment : DialogFragment() {
             val store = ConfigStore(requireContext())
             currentConfig = store.flow.first()
 
+            binding.tvUserName.text = currentConfig.pcUserName
             initPages()
             setupNavigation()
             showTab(currentTabId)
@@ -127,23 +128,38 @@ class PcSettingsDialogFragment : DialogFragment() {
             context = requireContext(),
             scope = viewLifecycleOwner.lifecycleScope,
             config = currentConfig,
-            onWallpaperChanged = { onWallpaperChanged?.invoke() },
-            onPickCustomPhoto = { pickCustomImageLauncher.launch("image/*") },
-            onOpenLockSetup = { openLockSetupDialog() }
+            pickWallpaperLauncher = pickCustomImageLauncher,
+            onOpenLockSetup = { openLockSetupDialog() },
+            onConfigChanged = { cfg -> onConfigChanged(cfg) }
         )
 
         systemPage = PcSettingsSystemPage(
             context = requireContext(),
             scope = viewLifecycleOwner.lifecycleScope,
-            config = currentConfig
+            config = currentConfig,
+            onConfigChanged = { cfg -> onConfigChanged(cfg) }
         )
 
         otherTabs = PcSettingsOtherTabs(
             context = requireContext(),
             scope = viewLifecycleOwner.lifecycleScope,
             config = currentConfig,
-            onOpenLockSetup = { openLockSetupDialog() }
+            onOpenLockSetup = { openLockSetupDialog() },
+            onConfigChanged = { cfg -> onConfigChanged(cfg) },
+            onRestartEmulator = {
+                dismiss()
+                activity?.recreate()
+            }
         )
+    }
+
+    private fun onConfigChanged(newConfig: LauncherConfig) {
+        currentConfig = newConfig
+        _binding?.tvUserName?.text = newConfig.pcUserName
+        personalisationPage?.updateConfig(newConfig)
+        systemPage?.updateConfig(newConfig)
+        otherTabs?.updateConfig(newConfig)
+        onWallpaperChanged?.invoke()
     }
 
     private fun setupNavigation() {
@@ -205,12 +221,11 @@ class PcSettingsDialogFragment : DialogFragment() {
             }
 
             if (copied) {
+                val newCfg = currentConfig.copy(pcUseCustomWallpaper = true)
                 ConfigStore(context).update {
                     it.copy(pcUseCustomWallpaper = true)
                 }
-                currentConfig = currentConfig.copy(pcUseCustomWallpaper = true)
-                personalisationPage?.updateConfig(currentConfig)
-                onWallpaperChanged?.invoke()
+                onConfigChanged(newCfg)
                 Toast.makeText(context, "Desktop wallpaper applied", Toast.LENGTH_SHORT).show()
             } else {
                 Toast.makeText(context, "Failed to load image", Toast.LENGTH_SHORT).show()
@@ -222,8 +237,9 @@ class PcSettingsDialogFragment : DialogFragment() {
         PinSetupDialogFragment.newInstance(
             onSaved = { newCred ->
                 viewLifecycleOwner.lifecycleScope.launch {
+                    val newCfg = currentConfig.copy(deviceLock = newCred)
                     ConfigStore(requireContext()).update { it.copy(deviceLock = newCred) }
-                    currentConfig = currentConfig.copy(deviceLock = newCred)
+                    onConfigChanged(newCfg)
                     Toast.makeText(requireContext(), "Lock PIN updated", Toast.LENGTH_SHORT).show()
                 }
             }
