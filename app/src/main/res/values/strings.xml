@@ -31,7 +31,7 @@
     <!-- Long-press menu -->
     <string name="menu_open">Open</string>
     <string name="menu_move">Move</string>
-    <string name="menu_hide">Hide from launcher</string>
+    <string name="menu_hide">Hide app</string>
     <string name="menu_unhide">Unhide</string>
     <string name="menu_close">Close</string>
     <string name="menu_app_info">App info</string>
@@ -51,7 +51,7 @@
     <string name="group_system">System</string>
     <string name="item_app">Apps</string>
     <string name="item_app_sub">Launch any app, open its info page</string>
-    <string name="item_launcher_settings">Launcher settings</string>
+    <string name="item_launcher_settings">Preferences</string>
     <string name="item_launcher_settings_sub">Language, save and restore your setup</string>
     <string name="item_android_settings">Android settings</string>
     <string name="item_android_settings_sub">Open the system settings of this device</string>
@@ -153,8 +153,8 @@
     <string name="vpn_dialog_title">VPN button opens…</string>
 
     <!-- Settings: about -->
-    <string name="about_version">Version 1.0</string>
-    <string name="about_desc">A lightweight, one-screen launcher for Android TV and Google TV. No ads, no tracking, no background services.</string>
+    <string name="about_version">Version 1.0.4</string>
+    <string name="about_desc">A high-performance desktop PC emulator and desktop environment for Android.</string>
     <string name="about_foss">Free &amp; open source</string>
     <string name="about_license">Licensed under the GNU GPLv3 — use, study, share and modify freely.</string>
     <string name="about_source">Source code</string>
@@ -224,17 +224,17 @@
     <string name="voice_search_mic_prompt">Click the microphone to speak</string>
     <string name="permissions_title">Smart Permissions</string>
     <string name="permission_usage_title">Most Used Apps (Usage Access)</string>
-    <string name="permission_usage_desc">Allows the launcher to organize and show your most frequently opened apps automatically on the home screen.</string>
+    <string name="permission_usage_desc">Allows organizing and showing your most frequently opened apps automatically on the desktop.</string>
     <string name="permission_usage_stats_title">Usage Access Required</string>
     <string name="permission_usage_stats_desc">To display your frequently used apps automatically, grant Usage Access permission.</string>
     <string name="permission_mic_title">Microphone Access for Voice Search</string>
-    <string name="permission_mic_desc">Used to search for apps and media quickly using your voice on TV remote or phone.</string>
+    <string name="permission_mic_desc">Used to search for apps and media quickly using your voice.</string>
     <string name="permission_overlay_title">Draw Over Other Apps</string>
-    <string name="permission_overlay_desc">Allows opening the TV Quick Side Panel / Control Center on top of any active app.</string>
+    <string name="permission_overlay_desc">Allows opening the Quick Assist Panel / Taskbar on top of any active app.</string>
     <string name="permission_bt_title">Bluetooth Remote &amp; Gamepad</string>
     <string name="permission_bt_desc">Displays connected remote name and real-time battery percentage in the top header.</string>
-    <string name="permission_accessibility_title">Remote Button Remap (Accessibility)</string>
-    <string name="permission_accessibility_desc">Maps the remote Home key to Gothwad Computer so it stays default on Google TV and Fire TV.</string>
+    <string name="permission_accessibility_title">Button Remap</string>
+    <string name="permission_accessibility_desc">Quick navigation button access.</string>
     <string name="control_center">Quick Dashboard</string>
     <string name="volume">Volume</string>
     <string name="mute">Mute</string>
@@ -256,11 +256,11 @@
     <string name="item_security_sub">Device lock, App lock &amp; Hide apps</string>
     <string name="security_title">Password &amp; Security</string>
     <string name="device_lock_title">Device Lock</string>
-    <string name="device_lock_sub">Require PIN when TV boots or launcher opens</string>
+    <string name="device_lock_sub">Require PIN when Gothwad Computer opens</string>
     <string name="app_lock_title">App Lock</string>
     <string name="app_lock_sub">Lock individual apps with a secure PIN</string>
     <string name="hide_apps_title">Hide Apps</string>
-    <string name="hide_apps_sub">Completely hide apps from launcher with secret code</string>
+    <string name="hide_apps_sub">Completely hide apps with secret code</string>
     <string name="pin_type_title">PIN Length</string>
     <string name="pin_4_digits">4 Digits</string>
     <string name="pin_6_digits">6 Digits</string>

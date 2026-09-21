@@ -155,7 +155,7 @@ class PcSettingsOtherTabs(
     private fun buildUpdatePage(binding: LayoutPcSettingsGenericBinding) {
         binding.tvPageTitle.text = "Windows Update"
         addCard(binding, R.drawable.ic_win_update, "Check for updates", "You're up to date • Last checked: Today") {
-            Toast.makeText(context, "You're up to date! Launcher version 1.0.4", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "You're up to date! Gothwad PC Emulator version 1.0.4", Toast.LENGTH_SHORT).show()
         }
         addCard(binding, R.drawable.ic_win_time, "Pause updates", "Pause for 1 week")
         addCard(binding, R.drawable.ic_win_system, "Update history", "View installed updates and changelog")

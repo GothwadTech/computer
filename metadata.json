@@ -1,6 +1,6 @@
 {
   "name": "Gothwad Computer",
-  "description": "A high-performance desktop PC emulator and desktop launcher for Android with window management, file explorer, web apps, and start menu.",
+  "description": "A high-performance desktop PC emulator and desktop environment for Android with window management, file explorer, web apps, and start menu.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

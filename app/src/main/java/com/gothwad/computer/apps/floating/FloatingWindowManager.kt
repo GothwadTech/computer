@@ -126,6 +126,12 @@ class FloatingWindowManager(
 
     fun hasOpenWindows(): Boolean = activeWindows.isNotEmpty()
 
+    fun closeTopWindow(): Boolean {
+        val target = activeWindows.lastOrNull { !it.isMinimized } ?: activeWindows.lastOrNull() ?: return false
+        closeWindow(target.id)
+        return true
+    }
+
     fun getActiveWindows(): List<FloatingWindow> = activeWindows.toList()
 
     @SuppressLint("ClickableViewAccessibility")

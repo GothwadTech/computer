@@ -90,9 +90,17 @@ class MainActivity : AppCompatActivity() {
             )
         }
 
-        // A home screen / desktop emulator never exits on Back
+        // Handle Back when device is locked so it cannot be bypassed
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() { /* no-op */ }
+            override fun handleOnBackPressed() {
+                if (!GothwadApplication.hasUnlockedDeviceThisProcess && currentConfig.deviceLock.enabled) {
+                    // Stay on device lock screen
+                    return
+                }
+                // Allow standard back navigation
+                isEnabled = false
+                onBackPressedDispatcher.onBackPressed()
+            }
         })
 
         ContextCompat.registerReceiver(

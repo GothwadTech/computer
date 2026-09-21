@@ -83,7 +83,7 @@ class FloatingTaskbarService : Service() {
             ACTION_TOGGLE_MENU -> toggleMenu()
             ACTION_STOP_SERVICE -> stopSelf()
         }
-        return START_STICKY
+        return START_NOT_STICKY
     }
 
     private fun handleConfigChange(config: LauncherConfig) {

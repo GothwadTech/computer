@@ -24,6 +24,7 @@ import android.widget.PopupWindow
 import android.widget.RelativeLayout
 import android.widget.SeekBar
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -271,6 +272,33 @@ class PcLauncherFragment : Fragment() {
             adapter = pinnedAdapter
             setHasFixedSize(true)
         }
+
+        // Handle Back button gracefully for normal PC emulator app
+        var lastBackPressTime = 0L
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (binding.containerStartMenu.visibility == View.VISIBLE ||
+                    binding.containerQuickSettings.visibility == View.VISIBLE ||
+                    activePopupWindow?.isShowing == true) {
+                    closeAllFlyouts()
+                    return
+                }
+
+                val fwm = floatingWindowManager
+                if (fwm != null && fwm.hasOpenWindows()) {
+                    fwm.closeTopWindow()
+                    return
+                }
+
+                val currentTime = System.currentTimeMillis()
+                if (currentTime - lastBackPressTime < 2000L) {
+                    requireActivity().finish()
+                } else {
+                    lastBackPressTime = currentTime
+                    Toast.makeText(requireContext(), "Press BACK again to exit", Toast.LENGTH_SHORT).show()
+                }
+            }
+        })
 
         // Dismiss flyouts when touching desktop wallpaper or grid
         binding.pcLauncherRoot.setOnClickListener {

@@ -160,7 +160,7 @@ class PcSettingsSystemPage(
             root = binding.cardSysRecovery,
             iconRes = R.drawable.ic_win_update,
             title = "Recovery",
-            subtitle = "Reset launcher preferences to defaults"
+            subtitle = "Reset PC emulator preferences to defaults"
         ) {
             scope.launch {
                 ConfigStore(context).update { LauncherConfig() }
