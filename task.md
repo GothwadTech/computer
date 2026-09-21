@@ -1,4 +1,4 @@
-# Gothwad Launcher — Reliability Hardening + Remote Button Mapping
+# Gothwad Computer — Reliability Hardening + Remote Button Mapping
 
 ## How to use this file
 Same rule as `task.md`: feed **one phase at a time** to Google AI Studio, as its own separate prompt/session. After each phase, build, install on the real test device, confirm nothing regressed, then move on. Do not skip ahead or merge phases — each phase touches memory-sensitive/system-sensitive code and needs to be verified in isolation on the actual STB.

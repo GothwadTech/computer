@@ -1,4 +1,4 @@
-# Gothwad Launcher
+# Gothwad Computer
 
 <p align="center">
   <b>A high-performance, lightweight universal launcher tailored for Android TV and Desktop PC environments.</b>
@@ -17,7 +17,7 @@
 
 ## 🌟 Overview
 
-**Gothwad Launcher** is an ultra-fast, modern Android launcher designed from the ground up for both large TV screens (10-foot experience) and desktop/large tablet layouts. Built with **Jetpack Compose** and Android TV Material guidelines, it delivers zero-lag navigation, rich visual aesthetics, and extensive customization without bloat.
+**Gothwad Computer** is an ultra-fast, modern Android launcher designed from the ground up for both large TV screens (10-foot experience) and desktop/large tablet layouts. Built with **Jetpack Compose** and Android TV Material guidelines, it delivers zero-lag navigation, rich visual aesthetics, and extensive customization without bloat.
 
 ---
 

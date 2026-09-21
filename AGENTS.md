@@ -1,4 +1,4 @@
-# Gothwad Launcher Developer & Architecture Rules
+# Gothwad Computer Developer & Architecture Rules
 
 ## Architecture: Native Android Views Only (No Jetpack Compose)
 

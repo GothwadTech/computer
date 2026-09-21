@@ -1,10 +1,10 @@
 # kotlinx.serialization
 -keepattributes *Annotation*, InnerClasses
 -dontnote kotlinx.serialization.AnnotationsKt
--keep,includedescriptorclasses class com.gothwad.launcher.**$$serializer { *; }
--keepclassmembers class com.gothwad.launcher.** {
+-keep,includedescriptorclasses class com.gothwad.computer.**$$serializer { *; }
+-keepclassmembers class com.gothwad.computer.** {
     *** Companion;
 }
--keepclasseswithmembers class com.gothwad.launcher.** {
+-keepclasseswithmembers class com.gothwad.computer.** {
     kotlinx.serialization.KSerializer serializer(...);
 }

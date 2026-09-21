@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.gothwad.launcher"
+    namespace = "com.gothwad.computer"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.gothwad.launcher"
+        applicationId = "com.gothwad.computer"
         minSdk = 21
         targetSdk = 34
         versionCode = (project.findProperty("versionCode") as? String)?.toIntOrNull() ?: 7

@@ -19,7 +19,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
         android:layout_marginBottom="14dp"
-        android:text="Adjust the display density for Gothwad Launcher. Lower DPI makes elements smaller with more space, higher DPI makes elements larger."
+        android:text="Adjust the display density for Gothwad Computer. Lower DPI makes elements smaller with more space, higher DPI makes elements larger."
         android:textColor="#94A3B8"
         android:textSize="13sp" />
 

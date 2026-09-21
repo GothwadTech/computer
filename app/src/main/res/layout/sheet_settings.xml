@@ -758,7 +758,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
-                                android:text="Gothwad Launcher v1.0.6 (Build 7)"
+                                android:text="Gothwad Computer v1.0.6 (Build 7)"
                                 android:textColor="#94A3B8"
                                 android:textSize="12sp" />
                         </LinearLayout>
@@ -2190,7 +2190,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Gothwad Launcher"
+                            android:text="Gothwad Computer"
                             android:textColor="#FFFFFF"
                             android:textSize="18sp"
                             android:textStyle="bold" />

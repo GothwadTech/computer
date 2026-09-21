@@ -36,9 +36,10 @@ jobs:
 
       - name: Validate and Prepare Gradle Wrapper
         run: |
-          if [ ! -f "gradle/wrapper/gradle-wrapper.jar" ]; then
-            echo "gradle-wrapper.jar not found, generating wrapper..."
-            gradle wrapper --gradle-version 8.10.2 || true
+          if ! unzip -tq "gradle/wrapper/gradle-wrapper.jar" 2>/dev/null; then
+            echo "gradle-wrapper.jar not found or corrupted, restoring valid wrapper jar..."
+            mkdir -p gradle/wrapper
+            curl -sSL "https://raw.githubusercontent.com/gradle/gradle/v9.3.1/gradle/wrapper/gradle-wrapper.jar" -o "gradle/wrapper/gradle-wrapper.jar" || true
           fi
           chmod +x ./gradlew
 
@@ -91,8 +92,8 @@ jobs:
 
           # 0. Copy Debug APK directly (already signed with debug keystore)
           if [ -n "$DEBUG_APK" ]; then
-            cp "$DEBUG_APK" output_release/GothwadLauncher-v${V_NAME}-Debug.apk
-            echo "Successfully included Debug APK: output_release/GothwadLauncher-v${V_NAME}-Debug.apk"
+            cp "$DEBUG_APK" output_release/GothwadComputer-v${V_NAME}-Debug.apk
+            echo "Successfully included Debug APK: output_release/GothwadComputer-v${V_NAME}-Debug.apk"
           fi
 
           if [ -z "$KEYSTORE_BASE64" ]; then
@@ -118,7 +119,7 @@ jobs:
           elif [ -n "$DETECTED_ALIAS" ]; then
             ACTUAL_ALIAS="$DETECTED_ALIAS"
           else
-            ACTUAL_ALIAS="gothwad_launcher_key"
+            ACTUAL_ALIAS="gothwad_computer_key"
           fi
           
           echo "Using Keystore Alias: $ACTUAL_ALIAS"
@@ -141,20 +142,20 @@ jobs:
               --ks-key-alias "$ACTUAL_ALIAS" \
               --ks-pass "pass:$KEYSTORE_PASS" \
               --key-pass "pass:$KEY_PASS" \
-              --out output_release/GothwadLauncher-v${V_NAME}-Release.apk \
+              --out output_release/GothwadComputer-v${V_NAME}-Release.apk \
               "$UNALIGNED_TEMP"
               
-            $APKSIGNER verify --verbose output_release/GothwadLauncher-v${V_NAME}-Release.apk
+            $APKSIGNER verify --verbose output_release/GothwadComputer-v${V_NAME}-Release.apk
             rm -f "$UNALIGNED_TEMP"
           fi
           
           # 2. Sign Play Store AAB Bundle using jarsigner
           if [ -n "$UNSIGNED_AAB" ]; then
-            cp "$UNSIGNED_AAB" output_release/GothwadLauncher-v${V_NAME}-PlayStore.aab
+            cp "$UNSIGNED_AAB" output_release/GothwadComputer-v${V_NAME}-PlayStore.aab
             jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
               -keystore "$KS_PATH" \
               -storepass "$KEYSTORE_PASS" -keypass "$KEY_PASS" \
-              output_release/GothwadLauncher-v${V_NAME}-PlayStore.aab \
+              output_release/GothwadComputer-v${V_NAME}-PlayStore.aab \
               "$ACTUAL_ALIAS"
             echo "Successfully signed Play Store AAB!"
           fi
@@ -166,7 +167,7 @@ jobs:
       - name: Upload Signed Release APK, Debug APK & AAB Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: Gothwad-Launcher-v${{ steps.versioning.outputs.v_name }}-Build${{ steps.versioning.outputs.v_code }}
+          name: Gothwad-Computer-v${{ steps.versioning.outputs.v_name }}-Build${{ steps.versioning.outputs.v_code }}
           path: output_release/
 
       - name: Create Automatic GitHub Release
@@ -180,6 +181,6 @@ jobs:
           prerelease: false
           generate_release_notes: true
           files: |
-            output_release/GothwadLauncher-v${{ steps.versioning.outputs.v_name }}-Release.apk
-            output_release/GothwadLauncher-v${{ steps.versioning.outputs.v_name }}-Debug.apk
-            output_release/GothwadLauncher-v${{ steps.versioning.outputs.v_name }}-PlayStore.aab
+            output_release/GothwadComputer-v${{ steps.versioning.outputs.v_name }}-Release.apk
+            output_release/GothwadComputer-v${{ steps.versioning.outputs.v_name }}-Debug.apk
+            output_release/GothwadComputer-v${{ steps.versioning.outputs.v_name }}-PlayStore.aab

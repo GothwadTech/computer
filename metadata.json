@@ -1,5 +1,5 @@
 {
-  "name": "Gothwad Launcher",
+  "name": "Gothwad Computer",
   "description": "A high-performance universal launcher for Android TV and Desktop PC with instant loading and multi-input support.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]

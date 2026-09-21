@@ -1,4 +1,4 @@
-# Gothwad Launcher — Privacy Lock System (Device Lock / App Lock / Hidden Apps)
+# Gothwad Computer — Privacy Lock System (Device Lock / App Lock / Hidden Apps)
 
 ## How to use this file
 Same rule as `task.md`: feed **one phase at a time** to Google AI Studio, in its own session. Build + install on the real box after each phase, confirm the specific bypass tests at the end of that phase actually fail to bypass, then move to the next phase. Do not merge phases.
